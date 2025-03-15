@@ -24,7 +24,7 @@ persistent_session.session
 
 
 # logs
-telegram-bot.log
+telegram_bot.log
 
 
 
