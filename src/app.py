@@ -24,11 +24,27 @@ def get_env_path():
     return env_path
 
 
+# async def handle_bot_response(event):
+#     try:
+#         buttons = event.message.reply_markup
+#         first_button = buttons.rows[0].buttons[0]
+#         logger.info(f"Received bot response: {event}")
+#     except Exception as e:
+#         logger.error(f"Error handling bot response: {e}")
+
+
+# async def bot_communication(client, identifier):
+#     client.add_event_handler(
+#         handle_bot_response,
+#         events.NewMessage(chats=RECIPIENT_ID, incoming=True),
+#     )
+#     await client.send_message(RECIPIENT_ID, identifier)
+#
+
+
 async def handle_message(event):
     """Handle incoming messages"""
     try:
-        # start timer
-        start_time = time.time()
         # Get the message text
         message_text = event.message.raw_text.strip()
 
@@ -45,20 +61,17 @@ async def handle_message(event):
         logger.info(f"Matched identifier: {identifier}")
 
         await event.client.send_message(RECIPIENT_ID, identifier)
-
-        end_time = time.time()
-        execution_time = end_time - start_time
-        logger.info(f"Execution time: {execution_time:.6f} seconds")
+        # await bot_communication(event.client, identifier)
 
     except Exception as e:
         logger.error(f"Error handling message: {e}")
 
 
-# Function to register all handlers
 def register_handlers(client):
     """Register all event handlers"""
-    # Using regex pattern to match messages ending with 'pump' or 'moon'
-    client.add_event_handler(handle_message, events.NewMessage(chats=ALLOWED_SENDERS))
+    client.add_event_handler(
+        handle_message, events.NewMessage(chats=ALLOWED_SENDERS, incoming=True)
+    )
 
 
 async def main():
@@ -73,9 +86,9 @@ async def main():
             # Create the client with a session name
             async with TelegramClient("persistent_session", api_id, api_hash) as client:
                 # Connect to the server
-                await client.connect()
                 logger.info("Client started successfully")
-                me = await client.get_me()
+
+                # me = await client.get_me()
 
                 # "me" is a user object. You can pretty-print
                 # any Telegram object with the "stringify" method:

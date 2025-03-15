@@ -23,6 +23,8 @@ persistent_session.session-journal
 persistent_session.session
 
 
+# logs
+telegram-bot.log
 
 
 
