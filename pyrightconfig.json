@@ -1,0 +1,15 @@
+{
+	"exclude": ["**/site-packages/telethon/**"],
+	"ignore": ["**/site-packages/telethon/**"],
+	"typeCheckingMode": "basic",
+	"reportMissingImports": false,
+	"reportGeneralTypeIssues": "none",
+	"reportUnknownMemberType": "none",
+	"reportUnknownArgumentType": "none",
+	"reportUnknownVariableType": "none",
+	"reportUnknownLambdaType": "none",
+	"reportInvalidTypeVarUse": "none",
+	"reportUntypedFunctionDecorator": "none",
+	"reportMissingTypeStubs": false,
+	"reportArgumentType": "none"
+}

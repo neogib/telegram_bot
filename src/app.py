@@ -1,0 +1,108 @@
+import logging
+import time
+from pathlib import Path
+from typing import cast
+
+from dotenv import dotenv_values
+from telethon import TelegramClient, events
+
+from .config import ALLOWED_SENDERS, MAX_RETRIES, PATTERN, RECIPIENT_ID, RETRY_DELAY
+
+# Set up logging to help with debugging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filename="telegram_bot.log",
+)
+logger = logging.getLogger(__name__)
+
+
+def get_env_path():
+    current_file = Path(__file__)
+    project_root = current_file.parent.parent
+    env_path = project_root / ".env"
+    return env_path
+
+
+async def handle_message(event):
+    """Handle incoming messages"""
+    try:
+        # start timer
+        start_time = time.time()
+        # Get the message text
+        message_text = event.message.raw_text.strip()
+
+        if "pump" not in message_text and "moon" not in message_text:
+            logger.info("Message does not contain 'pump' or 'moon'")
+            return
+
+        match = PATTERN.search(message_text)
+        if not match:
+            logger.info("Message does not match the pattern")
+            return
+
+        identifier = match.group()
+        logger.info(f"Matched identifier: {identifier}")
+
+        await event.client.send_message(RECIPIENT_ID, identifier)
+
+        end_time = time.time()
+        execution_time = end_time - start_time
+        logger.info(f"Execution time: {execution_time:.6f} seconds")
+
+    except Exception as e:
+        logger.error(f"Error handling message: {e}")
+
+
+# Function to register all handlers
+def register_handlers(client):
+    """Register all event handlers"""
+    # Using regex pattern to match messages ending with 'pump' or 'moon'
+    client.add_event_handler(handle_message, events.NewMessage(chats=ALLOWED_SENDERS))
+
+
+async def main():
+    """Main function that sets up the client and handlers"""
+    retry_count = 0
+    env_path = get_env_path()
+    api_id = int(cast(str, dotenv_values(env_path)["API_ID"]))
+    api_hash = cast(str, dotenv_values(env_path)["API_HASH"])
+
+    while retry_count < MAX_RETRIES:
+        try:
+            # Create the client with a session name
+            async with TelegramClient("persistent_session", api_id, api_hash) as client:
+                # Connect to the server
+                await client.connect()
+                logger.info("Client started successfully")
+                me = await client.get_me()
+
+                # "me" is a user object. You can pretty-print
+                # any Telegram object with the "stringify" method:
+                # print(me.stringify())
+                # print(client.list_event_handlers())
+                #
+                # async for dialog in client.iter_dialogs():
+                #     print(f"Dialog: {dialog.name} ({dialog.id})")
+
+                register_handlers(client)
+                logger.info("Bot is now running...")
+
+                # Run until disconnected, but handle reconnection
+                await client.run_until_disconnected()
+
+        except Exception as e:
+            retry_count += 1
+            logger.error(f"Connection error (attempt {retry_count}/{MAX_RETRIES}): {e}")
+
+            if retry_count < MAX_RETRIES:
+                logger.info(f"Retrying in {RETRY_DELAY} seconds...")
+                time.sleep(RETRY_DELAY)
+            else:
+                logger.critical("Maximum retries reached. Exiting.")
+                break
+        finally:
+            # Ensure client is disconnected before retrying
+            if "client" in locals() and client.is_connected():
+                await client.disconnect()
+                logger.info("Client disconnected")
