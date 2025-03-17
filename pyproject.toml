@@ -7,5 +7,6 @@ requires-python = ">=3.13"
 dependencies = [
     "debugpy>=1.8.13",
     "dotenv>=0.9.9",
+    "rich>=13.9.4",
     "telethon>=1.39.0",
 ]

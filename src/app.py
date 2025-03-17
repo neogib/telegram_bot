@@ -4,9 +4,15 @@ from pathlib import Path
 from typing import cast
 
 from dotenv import dotenv_values
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 from telethon import TelegramClient, events
 
 from .config import ALLOWED_SENDERS, MAX_RETRIES, PATTERN, RECIPIENT_ID, RETRY_DELAY
+
+console = Console()
+
 
 # Set up logging to help with debugging
 logging.basicConfig(
@@ -43,6 +49,10 @@ async def handle_message(event):
         logger.info(f"Matched identifier: {identifier}")
 
         await event.client.send_message(RECIPIENT_ID, identifier)
+        logger.info("Message sent to recipient")
+        console.print(
+            f"[bold green]✅ Message sent to recipient: {identifier}[/bold green]"
+        )
         # await bot_communication(event.client, identifier)
 
     except Exception as e:
@@ -67,21 +77,16 @@ async def main():
         try:
             # Create the client with a session name
             async with TelegramClient("persistent_session", api_id, api_hash) as client:
-                # Connect to the server
-                logger.info("Client started successfully")
-
-                # me = await client.get_me()
-
-                # "me" is a user object. You can pretty-print
-                # any Telegram object with the "stringify" method:
-                # print(me.stringify())
-                # print(client.list_event_handlers())
-                #
                 # async for dialog in client.iter_dialogs():
                 #     print(f"Dialog: {dialog.name} ({dialog.id})")
 
                 register_handlers(client)
-                logger.info("Bot is now running...")
+
+                # successful connection
+                logger.info("Client started successfully")
+                success_text = Text("✅ Bot started successfully!")
+                success_text.stylize("bold green")
+                console.print(Panel(success_text, title="Status"))
 
                 # Run until disconnected, but handle reconnection
                 await client.run_until_disconnected()
@@ -89,6 +94,10 @@ async def main():
         except Exception as e:
             retry_count += 1
             logger.error(f"Connection error (attempt {retry_count}/{MAX_RETRIES}): {e}")
+            console.print(
+                f"""[bold red]❌ Error occurred:[/bold red] Could not connect to server.
+                Retrying... (attempt {retry_count}/{MAX_RETRIES})"""
+            )
 
             if retry_count < MAX_RETRIES:
                 logger.info(f"Retrying in {RETRY_DELAY} seconds...")
