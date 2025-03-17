@@ -51,7 +51,7 @@ async def handle_message(event):
         await event.client.send_message(RECIPIENT_ID, identifier)
         logger.info("Message sent to recipient")
         console.print(
-            f"[bold green]✅ Message sent to recipient: {identifier}[/bold green]"
+            f"[bold green]✅ Message sent to recipient: [/bold green] {identifier}"
         )
         # await bot_communication(event.client, identifier)
 
@@ -77,8 +77,8 @@ async def main():
         try:
             # Create the client with a session name
             async with TelegramClient("persistent_session", api_id, api_hash) as client:
-                # async for dialog in client.iter_dialogs():
-                #     print(f"Dialog: {dialog.name} ({dialog.id})")
+                async for dialog in client.iter_dialogs():
+                    print(f"Dialog: {dialog.name} ({dialog.id})")
 
                 register_handlers(client)
 
