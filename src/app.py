@@ -24,24 +24,6 @@ def get_env_path():
     return env_path
 
 
-# async def handle_bot_response(event):
-#     try:
-#         buttons = event.message.reply_markup
-#         first_button = buttons.rows[0].buttons[0]
-#         logger.info(f"Received bot response: {event}")
-#     except Exception as e:
-#         logger.error(f"Error handling bot response: {e}")
-
-
-# async def bot_communication(client, identifier):
-#     client.add_event_handler(
-#         handle_bot_response,
-#         events.NewMessage(chats=RECIPIENT_ID, incoming=True),
-#     )
-#     await client.send_message(RECIPIENT_ID, identifier)
-#
-
-
 async def handle_message(event):
     """Handle incoming messages"""
     try:
