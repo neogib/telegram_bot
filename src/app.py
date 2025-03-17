@@ -16,7 +16,7 @@ console = Console()
 
 # Set up logging to help with debugging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     filename="telegram_bot.log",
 )
@@ -37,12 +37,20 @@ async def handle_message(event):
         message_text = event.message.raw_text.strip()
 
         if "pump" not in message_text and "moon" not in message_text:
-            logger.info("Message does not contain 'pump' or 'moon'")
+            logger.info(
+                f"Message does not contain 'pump' or 'moon', chat_id: {event.chat_id}"
+            )
+            console.print(
+                f"{time.asctime()} [bold red]❌ Message does not contain 'pump' or 'moon'[/bold red]. Message from {event.chat_id}"
+            )
             return
 
         match = PATTERN.search(message_text)
         if not match:
-            logger.info("Message does not match the pattern")
+            logger.info(f"Message does not match the pattern, chat_id: {event.chat_id}")
+            console.print(
+                f"{time.asctime()} [bold red]❌ Message does not match the pattern 'pump' or 'moon'[/bold red]. Message from {event.chat_id}"
+            )
             return
 
         identifier = match.group()
