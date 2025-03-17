@@ -85,8 +85,8 @@ async def main():
         try:
             # Create the client with a session name
             async with TelegramClient("persistent_session", api_id, api_hash) as client:
-                async for dialog in client.iter_dialogs():
-                    print(f"Dialog: {dialog.name} ({dialog.id})")
+                # async for dialog in client.iter_dialogs():
+                #     print(f"Dialog: {dialog.name} ({dialog.id})")
 
                 register_handlers(client)
 
