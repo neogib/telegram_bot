@@ -9,7 +9,13 @@ from rich.panel import Panel
 from rich.text import Text
 from telethon import TelegramClient, events
 
-from .config import ALLOWED_SENDERS, MAX_RETRIES, PATTERN, RECIPIENT_ID, RETRY_DELAY
+from .config import (
+    ALLOWED_SENDERS,
+    MAX_RETRIES,
+    PATTERNS,
+    RECIPIENT_ID,
+    RETRY_DELAY,
+)
 
 console = Console()
 
@@ -34,34 +40,54 @@ async def handle_message(event):
     """Handle incoming messages"""
     try:
         # Get the message text
-        message_text = event.message.raw_text.strip()
+        message_text = event.message.message
+
+        # Get the chat title
+        if not hasattr(event, "chat"):
+            chat_title = "Unknown"
+        elif hasattr(event.chat, "username"):
+            chat_title = event.chat.username
+        elif hasattr(event.chat, "title"):
+            chat_title = event.chat.title
+        else:
+            chat_title = "Unknown"
 
         if "pump" not in message_text and "moon" not in message_text:
             logger.info(
-                f"Message does not contain 'pump' or 'moon', chat_id: {event.chat_id}"
+                f"Message does not contain 'pump' or 'moon', chat_id: {chat_title}"
             )
             console.print(
-                f"{time.asctime()} [bold red]❌ Message does not contain 'pump' or 'moon'[/bold red]. Message from {event.chat_id}"
+                f"""{time.asctime()} [bold red]❌ Message does not contain 'pump' or 'moon'[/bold red]. 
+                Message from {chat_title}"""
             )
             return
 
-        match = PATTERN.search(message_text)
-        if not match:
-            logger.info(f"Message does not match the pattern, chat_id: {event.chat_id}")
-            console.print(
-                f"{time.asctime()} [bold red]❌ Message does not match the pattern 'pump' or 'moon'[/bold red]. Message from {event.chat_id}"
-            )
-            return
+        for pattern in PATTERNS:
+            match = pattern.search(message_text)
+            if match:
+                identifier = match.group()
+                logger.info(f"Matched identifier: {identifier}")
 
-        identifier = match.group()
-        logger.info(f"Matched identifier: {identifier}")
+                try:
+                    await event.client.send_message(RECIPIENT_ID, identifier)
+                    logger.info("Message sent to recipient")
+                    console.print(
+                        f"[bold green]✅ Message sent with identifier: [/bold green] {identifier}"
+                    )
+                    return
+                except Exception as e:
+                    logger.error(f"Error sending message: {e}")
+                    console.print(f"[bold red]❌ Error sending message: {e}[/bold red]")
 
-        await event.client.send_message(RECIPIENT_ID, identifier)
-        logger.info("Message sent to recipient")
-        console.print(
-            f"[bold green]✅ Message sent to recipient: [/bold green] {identifier}"
-        )
-        # await bot_communication(event.client, identifier)
+            if pattern == PATTERNS[-1]:
+                logger.info(
+                    f"Message does not match the pattern, chat_id: {chat_title}"
+                )
+                console.print(
+                    f"""{time.asctime()} [bold red]❌ Message does not contain 'pump' or 'moon'[/bold red]. 
+                    Message from {chat_title}"""
+                )
+                return
 
     except Exception as e:
         logger.error(f"Error handling message: {e}")
@@ -70,7 +96,11 @@ async def handle_message(event):
 def register_handlers(client):
     """Register all event handlers"""
     client.add_event_handler(
-        handle_message, events.NewMessage(chats=ALLOWED_SENDERS, incoming=True)
+        handle_message,
+        events.NewMessage(
+            chats=ALLOWED_SENDERS,
+            # incoming=True,
+        ),
     )
 
 
@@ -87,6 +117,7 @@ async def main():
             async with TelegramClient("persistent_session", api_id, api_hash) as client:
                 # async for dialog in client.iter_dialogs():
                 #     print(f"Dialog: {dialog.name} ({dialog.id})")
+                #     print(f"{dialog.id},")
 
                 register_handlers(client)
 
