@@ -11,6 +11,7 @@ from telethon import TelegramClient, events
 
 from .config import (
     ALLOWED_SENDERS,
+    ALLOWED_USER,
     MAX_RETRIES,
     PATTERNS,
     RECIPIENT_ID,
@@ -41,6 +42,10 @@ async def handle_message(event):
     try:
         # Get the message text
         message_text = event.message.message
+        user_id = event.input_sender.user_id
+        print(f"Received message from user_id: {user_id}")
+        if user_id != ALLOWED_USER:
+            return
 
         # Get the chat title
         if not hasattr(event, "chat"):
@@ -115,9 +120,9 @@ async def main():
         try:
             # Create the client with a session name
             async with TelegramClient("persistent_session", api_id, api_hash) as client:
-                # async for dialog in client.iter_dialogs():
-                #     print(f"Dialog: {dialog.name} ({dialog.id})")
-                #     print(f"{dialog.id},")
+                async for dialog in client.iter_dialogs():
+                    print(f"Dialog: {dialog.name} ({dialog.id})")
+                    print(f"{dialog.id},")
 
                 register_handlers(client)
 

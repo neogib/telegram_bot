@@ -10,6 +10,8 @@ ALLOWED_SENDERS = [
     6700023868,
     -1002458825510,
 ]
+ALLOWED_USER = 7234154402
+
 RECIPIENT_ID = 7181780057
 
 # Regex pattern to match messages ending with 'pump' or 'moon'
