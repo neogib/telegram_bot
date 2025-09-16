@@ -42,8 +42,9 @@ async def handle_message(event):
     try:
         # Get the message text
         message_text = event.message.message
-        user_id = event.input_sender.user_id
-        print(f"Received message from user_id: {user_id}")
+        user_id = event.sender_id
+        first_name = event.sender.first_name
+        print(f"Received message from user_id: {user_id}, first_name: {first_name}")
         if user_id != ALLOWED_USER:
             return
 
